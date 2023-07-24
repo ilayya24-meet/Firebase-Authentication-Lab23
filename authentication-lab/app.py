@@ -16,12 +16,13 @@ config = {
   "appId": "1:885302312908:web:e8972aafc751260a132769",
 
   "measurementId": "G-Q0HHEWW6PN",
-  "databaseURL":""
+  "databaseURL":"https://meet24lab-default-rtdb.firebaseio.com/"
 
 };
 
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
+db = firebase.database()
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config['SECRET_KEY'] = 'super-secret-key'
@@ -47,9 +48,19 @@ def signup():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
+        full_name = request.form['full_name']
+        username = request.form['username']
+        bio = request.form['bio']
+
+
         try:
             login_session['user'] = auth.create_user_with_email_and_password(email, password)
+            UID = login_session['user']['localId']
+            user = {'email': email, 'password': password, 'full_name': full_name, 'username': username, 'bio': bio}
+            db.child("Users").child(UID).set(user)
+
             return redirect(url_for('add_tweet'))
+
         except:
            error = "Authentication failed"
     return render_template("signup.html")
